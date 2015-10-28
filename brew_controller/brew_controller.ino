@@ -143,21 +143,28 @@ void loop() {
     handleRequest();
   }
 
-  for (byte i = 0; i < sizeof(heatCtrls); i++) {
-    if (heatCtrls[0].sensors) {
-      heatCtrls[0].calcTemp();
-      if (heatCtrls[0].running) {
-        heatCtrls[0].runPID();
+  for (byte i = 0; i < 3; i++) {
+    if (heatCtrls[i].sensors) {
+      heatCtrls[i].calcTemp();
+      if (heatCtrls[i].running) {
+        heatCtrls[i].runPID();
       }
     }
 
-    heatCtrls[0].reportStatus(0);
+    heatCtrls[i].reportStatus(i);
   }
 
   unsigned long end = millis();
   if (end < start + 1000) {
+    /*Serial.print("delay ");
+    Serial.println(1000-(end-start));*/
     delay(1000 - (end - start));
-  }
+  }/* else {
+    Serial.print("no delay, start: ");
+    Serial.print(start);
+    Serial.print(", end: ");
+    Serial.println(end);
+  }*/
 }
 
 void handleRequest() {
