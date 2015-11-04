@@ -13,13 +13,13 @@ class HeatController {
     DallasTemperature* sensors = 0;
     PID *pid = 0;
     double Kp = 0, Ki = 0, Kd = 0, Input = 0, Output = 0, Setpoint = 0;
-    unsigned int windowSize = 0;
+    unsigned int sampleTime = 0, windowSize = 0;
     unsigned long windowStartTime = millis();
     boolean running = false;
     byte outputSSR = LOW;
 
   public:
-    boolean setParameters(unsigned int pinSSR, unsigned int pinDS18B20, double Kp, double Ki, double Kd, double Setpoint, unsigned int windowSize) {
+    boolean setParameters(unsigned int pinSSR, unsigned int pinDS18B20, double Kp, double Ki, double Kd, double Setpoint, unsigned int SampleTime, unsigned int windowSize) {
       this->pinSSR = pinSSR;
       pinMode(this->pinSSR, OUTPUT);
 
@@ -42,8 +42,10 @@ class HeatController {
       this->Ki = Ki;
       this->Kd = Kd;
       this->Setpoint = Setpoint;
+      this->sampleTime = SampleTime;
       this->windowSize = windowSize;
       this->pid = new PID(&(this->Input), &(this->Output), &(this->Setpoint), Kp, Ki, Kd, DIRECT);
+      this->pid->SetSampleTime(this->sampleTime);
       this->pid->SetOutputLimits(0, this->windowSize);
       this->pid->SetMode(AUTOMATIC);
 
@@ -75,11 +77,13 @@ class HeatController {
 
     void runPID() {
       this->pid->Compute();
+      unsigned long now = millis();
 
-      while (millis() - this->windowStartTime > this->windowSize) {
-        this->windowStartTime += this->windowSize;
+      if (now - this->windowStartTime > this->windowSize) {
+        this->windowStartTime += this->windowSize * (now - this->windowStartTime) / this->windowSize;
       }
-      if (this->Output > millis() - this->windowStartTime) {
+
+      if (this->Output > now - this->windowStartTime) {
         this->outputSSR = HIGH;
         digitalWrite(this->pinSSR, HIGH);
       }
@@ -112,6 +116,8 @@ class HeatController {
       Serial.print(this->Ki);
       Serial.print(",\"kd\":");
       Serial.print(this->Kd);
+      Serial.print(",\"sampleTime\":");
+      Serial.print(this->sampleTime);
       Serial.print(",\"windowSize\":");
       Serial.print(this->windowSize);
       Serial.print(",\"setpoint\":");
@@ -199,12 +205,12 @@ void handleRequest() {
 }
 
 void handleCmdSet(const char* req) {
-  unsigned int idx, pinSSR, pinDS18B20, windowSize;
+  unsigned int idx, pinSSR, pinDS18B20, sampleTime, windowSize;
   char Kp[9], Ki[9], Kd[9], Setpoint[7];
 
-  sscanf(req, "S %u %u %u %s %s %s %u %s", &idx, &pinSSR, &pinDS18B20, &Kp, &Ki, &Kd, &windowSize, &Setpoint);
+  sscanf(req, "S %u %u %u %s %s %s %u %u %s", &idx, &pinSSR, &pinDS18B20, &Kp, &Ki, &Kd, &sampleTime, &windowSize, &Setpoint);
 
-  if (heatCtrls[idx].setParameters(pinSSR, pinDS18B20, atof(Kp), atof(Ki), atof(Kd), atof(Setpoint), windowSize)) {
+  if (heatCtrls[idx].setParameters(pinSSR, pinDS18B20, atof(Kp), atof(Ki), atof(Kd), atof(Setpoint), sampleTime, windowSize)) {
     sprintf(resp, "{\"cmd\":\"set\",\"idx\":%u,\"success\":true}", idx);
     sendToSerial(resp);
   } else {
