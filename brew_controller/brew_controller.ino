@@ -12,7 +12,7 @@ class HeatController {
     OneWire* oneWire = 0;
     DallasTemperature* sensors = 0;
     PID *pid = 0;
-    double Kp = 0, Ki = 0, Kd = 0, Input = 0, Output = 0, Setpoint = 0;
+    double Input = 0, Output = 0, Setpoint = 0;
     unsigned int sampleTime = 0, windowSize = 0;
     unsigned long windowStartTime = millis();
     boolean running = false;
@@ -38,12 +38,10 @@ class HeatController {
       if (this->pid) {
         delete this->pid;
       }
-      this->Kp = Kp;
-      this->Ki = Ki;
-      this->Kd = Kd;
       this->Setpoint = Setpoint;
       this->sampleTime = SampleTime;
       this->windowSize = windowSize;
+      this->Output = 0;
       this->pid = new PID(&(this->Input), &(this->Output), &(this->Setpoint), Kp, Ki, Kd, DIRECT);
       this->pid->SetSampleTime(this->sampleTime);
       this->pid->SetOutputLimits(0, this->windowSize);
@@ -111,11 +109,11 @@ class HeatController {
       Serial.print(",\"pinDS18B20\":");
       Serial.print(this->pinDS18B20);
       Serial.print(",\"kp\":");
-      Serial.print(this->Kp);
+      Serial.print(this->pid->GetKp());
       Serial.print(",\"ki\":");
-      Serial.print(this->Ki);
+      Serial.print(this->pid->GetKi());
       Serial.print(",\"kd\":");
-      Serial.print(this->Kd);
+      Serial.print(this->pid->GetKd());
       Serial.print(",\"sampleTime\":");
       Serial.print(this->sampleTime);
       Serial.print(",\"windowSize\":");
