@@ -19,29 +19,37 @@ class HeatController {
     byte outputSSR = LOW;
 
   public:
-    boolean setParameters(unsigned int pinSSR, unsigned int pinDS18B20, double Kp, double Ki, double Kd, double Setpoint, unsigned int SampleTime, unsigned int windowSize) {
+    boolean setParameters(unsigned int pinSSR, unsigned int pinDS18B20, double Kp, double Ki, double Kd, double Setpoint, double Output, unsigned int SampleTime, unsigned int windowSize) {
       this->pinSSR = pinSSR;
-      pinMode(this->pinSSR, OUTPUT);
+      if (this->pinSSR != 0) {
+        pinMode(this->pinSSR, OUTPUT);
+      }
 
       this->pinDS18B20 = pinDS18B20;
       if (this->oneWire) {
         delete this->oneWire;
+        this->oneWire = 0;
       }
-      this->oneWire = new OneWire(pinDS18B20);
-
       if (this->sensors) {
         delete this->sensors;
+        this->sensors = 0;
       }
-      this->sensors = new DallasTemperature(this->oneWire);
-      this->sensors->begin();
+
+      if (this->pinDS18B20 != 0) {
+        this->oneWire = new OneWire(this->pinDS18B20);
+        this->sensors = new DallasTemperature(this->oneWire);
+        this->sensors->begin();
+      }
 
       if (this->pid) {
         delete this->pid;
+        this->pid = 0;
       }
+
       this->Setpoint = Setpoint;
+      this->Output = Output;
       this->sampleTime = SampleTime;
       this->windowSize = windowSize;
-      this->Output = 0;
       this->pid = new PID(&(this->Input), &(this->Output), &(this->Setpoint), Kp, Ki, Kd, DIRECT);
       this->pid->SetSampleTime(this->sampleTime);
       this->pid->SetOutputLimits(0, this->windowSize);
@@ -204,11 +212,11 @@ void handleRequest() {
 
 void handleCmdSet(const char* req) {
   unsigned int idx, pinSSR, pinDS18B20, sampleTime, windowSize;
-  char Kp[9], Ki[9], Kd[9], Setpoint[7];
+  char Kp[9], Ki[9], Kd[9], Setpoint[7], Output[7];
 
-  sscanf(req, "S %u %u %u %s %s %s %u %u %s", &idx, &pinSSR, &pinDS18B20, &Kp, &Ki, &Kd, &sampleTime, &windowSize, &Setpoint);
+  sscanf(req, "S %u %u %u %s %s %s %u %u %s %s", &idx, &pinSSR, &pinDS18B20, &Kp, &Ki, &Kd, &sampleTime, &windowSize, &Setpoint, &Output);
 
-  if (heatCtrls[idx].setParameters(pinSSR, pinDS18B20, atof(Kp), atof(Ki), atof(Kd), atof(Setpoint), sampleTime, windowSize)) {
+  if (heatCtrls[idx].setParameters(pinSSR, pinDS18B20, atof(Kp), atof(Ki), atof(Kd), atof(Setpoint), atof(Output), sampleTime, windowSize)) {
     sprintf(resp, "{\"cmd\":\"set\",\"idx\":%u,\"success\":true}", idx);
     sendToSerial(resp);
   } else {
