@@ -213,7 +213,7 @@ void handleRequest() {
 
 void handleCmdSet(const char* req) {
   unsigned int idx, pinSSR, pinDS18B20, sampleTime, windowSize;
-  char Kp[9], Ki[9], Kd[9], Setpoint[7], Output[7];
+  char Kp[9], Ki[9], Kd[9], Setpoint[7], Output[9];
 
   sscanf(req, "S %u %u %u %s %s %s %u %u %s %s", &idx, &pinSSR, &pinDS18B20, &Kp, &Ki, &Kd, &sampleTime, &windowSize, &Setpoint, &Output);
 
