@@ -15,6 +15,7 @@ class HeatController {
     double Input = 0, Output = 0, Setpoint = 0;
     unsigned int sampleTime = 0, windowSize = 0;
     unsigned long windowStartTime = millis();
+    unsigned long lastReport = windowStartTime;
     boolean running = false;
     byte outputSSR = LOW;
 
@@ -109,7 +110,12 @@ class HeatController {
       this->running = false;
     }
 
-    void reportStatus(unsigned int idx) {
+    void reportStatus(unsigned int idx, unsigned long period) {
+      unsigned long now = millis();
+      if (now < this->lastReport + period) {
+        return;
+      }
+
       Serial.print("{\"idx\":");
       Serial.print(idx);
       Serial.print(",\"pinSSR\":");
@@ -138,6 +144,8 @@ class HeatController {
       Serial.print(this->outputSSR);
       Serial.println("}");
       Serial.flush();
+
+      this->lastReport = now;
     }
 };
 
@@ -149,7 +157,7 @@ void setup() {
 }
 
 void loop() {
-  unsigned long start = millis();
+  //unsigned long start = millis();
 
   if (Serial.available() > 0) {
     handleRequest();
@@ -163,20 +171,13 @@ void loop() {
       }
     }
 
-    heatCtrls[i].reportStatus(i);
+    heatCtrls[i].reportStatus(i, 1000);
   }
 
-  unsigned long end = millis();
-  if (end < start + 1000) {
-    /*Serial.print("delay ");
-    Serial.println(1000-(end-start));*/
-    delay(1000 - (end - start));
-  }/* else {
-    Serial.print("no delay, start: ");
-    Serial.print(start);
-    Serial.print(", end: ");
-    Serial.println(end);
-  }*/
+  //unsigned long end = millis();
+  //if (end < start + 1000) {
+  //  delay(1000 - (end - start));
+  //}
 }
 
 void handleRequest() {
