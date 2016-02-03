@@ -122,12 +122,18 @@ class HeatController {
       Serial.print(this->pinSSR);
       Serial.print(",\"pinDS18B20\":");
       Serial.print(this->pinDS18B20);
-      Serial.print(",\"kp\":");
-      Serial.print(this->pid->GetKp());
-      Serial.print(",\"ki\":");
-      Serial.print(this->pid->GetKi());
-      Serial.print(",\"kd\":");
-      Serial.print(this->pid->GetKd());
+      if (pid != 0) {
+        Serial.print(",\"kp\":");
+        Serial.print(this->pid->GetKp());
+        Serial.print(",\"ki\":");
+        Serial.print(this->pid->GetKi());
+        Serial.print(",\"kd\":");
+        Serial.print(this->pid->GetKd());
+      } else {
+        Serial.print(",\"kp\":-1");
+        Serial.print(",\"ki\":-1");
+        Serial.print(",\"kd\":-1");
+      }
       Serial.print(",\"sampleTime\":");
       Serial.print(this->sampleTime);
       Serial.print(",\"windowSize\":");
@@ -157,7 +163,7 @@ void setup() {
 }
 
 void loop() {
-  //unsigned long start = millis();
+  unsigned long start = millis();
 
   if (Serial.available() > 0) {
     handleRequest();
@@ -174,18 +180,18 @@ void loop() {
     heatCtrls[i].reportStatus(i, 1000);
   }
 
-  //unsigned long end = millis();
-  //if (end < start + 1000) {
-  //  delay(1000 - (end - start));
-  //}
+  unsigned long end = millis();
+  if (end < start + 1000) {
+    delay(1000 - (end - start));
+  }
 }
 
 void handleRequest() {
   String str = Serial.readStringUntil('\n');
   str.toCharArray(req, BUFFSIZE);
 
-  //sprintf(resp, "LOG: RECEIVED %s", req);
-  //sendToSerial(resp);
+  sprintf(resp, "LOG: RECEIVED [%s]", req);
+  sendToSerial(resp);
   //memset(resp, 0, BUFFSIZE);
 
   switch (req[0]) {
