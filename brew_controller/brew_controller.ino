@@ -118,9 +118,9 @@ class HeatController {
 
       Serial.print("{\"idx\":");
       Serial.print(idx);
-      Serial.print(",\"pinSSR\":");
+      Serial.print(",\"pSSR\":");
       Serial.print(this->pinSSR);
-      Serial.print(",\"pinDS18B20\":");
+      Serial.print(",\"pDS18B20\":");
       Serial.print(this->pinDS18B20);
       if (pid != 0) {
         Serial.print(",\"kp\":");
@@ -134,20 +134,20 @@ class HeatController {
         Serial.print(",\"ki\":-1");
         Serial.print(",\"kd\":-1");
       }
-      Serial.print(",\"sampleTime\":");
+      Serial.print(",\"st\":");
       Serial.print(this->sampleTime);
-      Serial.print(",\"windowSize\":");
+      Serial.print(",\"ws\":");
       Serial.print(this->windowSize);
-      Serial.print(",\"setpoint\":");
+      Serial.print(",\"sp\":");
       Serial.print(this->Setpoint);
-      Serial.print(",\"input\":");
+      Serial.print(",\"i\":");
       Serial.print(this->Input);
-      Serial.print(",\"output\":");
+      Serial.print(",\"o\":");
       Serial.print(this->Output);
-      Serial.print(",\"running\":");
+      Serial.print(",\"r\":");
       Serial.print(this->running);
-      Serial.print(",\"outputSSR\":");
-      Serial.print(this->outputSSR);
+      Serial.print(",\"oSSR\":");
+      Serial.print(this->oSSR);
       Serial.println("}");
       Serial.flush();
 
