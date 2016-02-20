@@ -110,9 +110,9 @@ class HeatController {
       this->running = false;
     }
 
-    void reportStatus(unsigned int idx, unsigned long period) {
+    void reportStatus(unsigned int idx) {
       unsigned long now = millis();
-      if (now < this->lastReport + period) {
+      if (now < this->lastReport + this->sampleTime) {
         return;
       }
 
@@ -177,7 +177,7 @@ void loop() {
       }
     }
 
-    heatCtrls[i].reportStatus(i, 1000);
+    heatCtrls[i].reportStatus(i);
   }
 
   unsigned long end = millis();
