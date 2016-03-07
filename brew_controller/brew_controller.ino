@@ -147,7 +147,7 @@ class HeatController {
       Serial.print(",\"r\":");
       Serial.print(this->running);
       Serial.print(",\"oSSR\":");
-      Serial.print(this->oSSR);
+      Serial.print(this->outputSSR);
       Serial.println("}");
       Serial.flush();
 
