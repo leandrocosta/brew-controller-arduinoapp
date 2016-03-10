@@ -112,6 +112,10 @@ class HeatController {
 
     void reportStatus(unsigned int idx) {
       unsigned long now = millis();
+      if (this->pinDS18B20 == 0) {
+        return;
+      }
+
       if (now < this->lastReport + this->sampleTime) {
         return;
       }
