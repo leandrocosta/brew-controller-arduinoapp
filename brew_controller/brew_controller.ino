@@ -163,7 +163,7 @@ HeatController heatCtrls[3];
 
 void setup() {
   Serial.begin(9600);
-  sendToSerial("{\"status\":\"running\"}");
+  sendToSerial("\n{\"status\":\"running\"}");
 }
 
 void loop() {
@@ -193,10 +193,8 @@ void loop() {
 void handleRequest() {
   String str = Serial.readStringUntil('\n');
   str.toCharArray(req, BUFFSIZE);
-
-  sprintf(resp, "LOG: RECEIVED [%s]", req);
+  sprintf(resp, "LOG: RECEIVED (LEN: %u) [%s]", str.length(), req);
   sendToSerial(resp);
-  //memset(resp, 0, BUFFSIZE);
 
   switch (req[0]) {
     case 'S': // S 0 11 10 10000 0 0 10000 35.0
