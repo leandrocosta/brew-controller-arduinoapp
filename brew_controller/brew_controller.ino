@@ -56,6 +56,8 @@ class HeatController {
       this->pid->SetOutputLimits(0, this->windowSize);
       this->pid->SetMode(AUTOMATIC);
 
+      //this->lastReport = this->windowStartTime = millis();
+
       return true;
     }
 
@@ -87,7 +89,8 @@ class HeatController {
       unsigned long now = millis();
 
       if (now - this->windowStartTime > this->windowSize) {
-        this->windowStartTime += this->windowSize * (now - this->windowStartTime) / this->windowSize;
+        //this->windowStartTime += this->windowSize * (now - this->windowStartTime) / this->windowSize;
+        this->windowStartTime += ((now - this->windowStartTime) / this->windowSize) * this->windowSize;
       }
 
       if (this->Output > now - this->windowStartTime) {
@@ -142,6 +145,10 @@ class HeatController {
       Serial.print(this->sampleTime);
       Serial.print(",\"ws\":");
       Serial.print(this->windowSize);
+      Serial.print(",\"wst\":");
+      Serial.print(this->windowStartTime);
+      Serial.print(", \"now\":");
+      Serial.print(millis());
       Serial.print(",\"sp\":");
       Serial.print(this->Setpoint);
       Serial.print(",\"i\":");
