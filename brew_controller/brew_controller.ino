@@ -2,6 +2,7 @@
 #include <DallasTemperature.h>
 #include <PID_v1.h>
 
+const char* VERSION = "v0.0.1";
 const int BUFFSIZE = 200;
 char req[BUFFSIZE];
 char resp[BUFFSIZE];
@@ -170,7 +171,9 @@ HeatController heatCtrls[3];
 
 void setup() {
   Serial.begin(9600);
-  sendToSerial("\n{\"status\":\"running\"}");
+  //sendToSerial("\n{\"status\":\"running\"}");
+  sprintf(resp, "\n{\"status\":\"running\",\"version\":\"%s\",\"now\":%lu}", VERSION, millis());
+  sendToSerial(resp);
 }
 
 void loop() {
@@ -230,9 +233,9 @@ void handleCmdSet(const char* req) {
   unsigned int idx, pinSSR, pinDS18B20, sampleTime, windowSize;
   char Kp[9], Ki[9], Kd[9], Setpoint[7], Output[9];
 
-  sscanf(req, "S %u %u %u %s %s %s %u %u %s %s", &idx, &pinSSR, &pinDS18B20, &Kp, &Ki, &Kd, &sampleTime, &windowSize, &Setpoint, &Output);
+  unsigned int numVarsFilled = sscanf(req, "S %u %u %u %s %s %s %u %u %s %s", &idx, &pinSSR, &pinDS18B20, &Kp, &Ki, &Kd, &sampleTime, &windowSize, &Setpoint, &Output);
 
-  if (heatCtrls[idx].setParameters(pinSSR, pinDS18B20, atof(Kp), atof(Ki), atof(Kd), atof(Setpoint), atof(Output), sampleTime, windowSize)) {
+  if (numVarsFilled == 10 && heatCtrls[idx].setParameters(pinSSR, pinDS18B20, atof(Kp), atof(Ki), atof(Kd), atof(Setpoint), atof(Output), sampleTime, windowSize)) {
     sprintf(resp, "{\"cmd\":\"set\",\"idx\":%u,\"success\":true}", idx);
     sendToSerial(resp);
   } else {
@@ -243,8 +246,9 @@ void handleCmdSet(const char* req) {
 
 void handleCmdPinDS18B20(const char* req) {
   unsigned int idx, pinDS18B20;
-  sscanf(req, "D %u %u", &idx, &pinDS18B20);
-  if (heatCtrls[idx].setPinDS18B20(pinDS18B20)) {
+  unsigned int numVarsFilled = sscanf(req, "D %u %u", &idx, &pinDS18B20);
+
+  if (numVarsFilled == 2 && heatCtrls[idx].setPinDS18B20(pinDS18B20)) {
     sprintf(resp, "{\"cmd\":\"ds18b20\",\"idx\":%u,\"success\":true}", idx);
     sendToSerial(resp);
   } else {
@@ -255,28 +259,43 @@ void handleCmdPinDS18B20(const char* req) {
 
 void handleCmdPlay(const char* req) {
   unsigned int idx;
-  sscanf(req, "P %u", &idx);
-  heatCtrls[idx].play();
-  sprintf(resp, "{\"cmd\":\"play\",\"idx\":%u,\"success\":true}", idx);
-  sendToSerial(resp);
+  unsigned int numVarsFilled = sscanf(req, "P %u", &idx);
+  if (numVarsFilled == 1) {
+    heatCtrls[idx].play();
+    sprintf(resp, "{\"cmd\":\"play\",\"idx\":%u,\"success\":true}", idx);
+    sendToSerial(resp);
+  } else {
+    sprintf(resp, "{\"cmd\":\"play\",\"idx\":%u,\"success\":false}", idx);
+    sendToSerial(resp);
+  }
 }
 
 void handleCmdStop(const char* req) {
   unsigned int idx;
-  sscanf(req, "T %u", &idx);
-  heatCtrls[idx].stop();
-  sprintf(resp, "{\"cmd\":\"stop\",\"idx\":%u,\"success\":true}", idx);
-  sendToSerial(resp);
+  unsigned int numVarsFilled = sscanf(req, "T %u", &idx);
+  if (numVarsFilled == 1) {
+    heatCtrls[idx].stop();
+    sprintf(resp, "{\"cmd\":\"stop\",\"idx\":%u,\"success\":true}", idx);
+    sendToSerial(resp);
+  } else {
+    sprintf(resp, "{\"cmd\":\"stop\",\"idx\":%u,\"success\":false}", idx);
+    sendToSerial(resp);
+  }
 }
 
 void handleCmdTemp(const char* req) {
   unsigned int idx;
-  sscanf(req, "E %u", &idx);
-  Serial.print("{\"cmd\":\"temp\",\"idx\":");
-  Serial.print(idx);
-  Serial.print(",\"success\":true,\"value\":");
-  Serial.print(heatCtrls[idx].Input);
-  Serial.println("}");
+  unsigned int numVarsFilled = sscanf(req, "E %u", &idx);
+  if (numVarsFilled == 1) {
+    Serial.print("{\"cmd\":\"temp\",\"idx\":");
+    Serial.print(idx);
+    Serial.print(",\"success\":true,\"value\":");
+    Serial.print(heatCtrls[idx].Input);
+    Serial.println("}");
+  } else {
+    sprintf(resp, "{\"cmd\":\"stop\",\"idx\":%u,\"success\":false}", idx);
+    sendToSerial(resp);
+  }
 }
 
 void sendToSerial(const char* buff) {
